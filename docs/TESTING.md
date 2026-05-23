@@ -31,8 +31,9 @@ Integration tests cover Infrastructure behavior using temp resources:
 - SQLite migration and repository tests against a temp database.
 - File operation tests against temp directories.
 - Watcher tests against temp directories only.
-- Logging tests with temp log paths when needed.
+- Logging tests with temp log paths only. Logging tests must prove secrets and raw private payloads such as transcripts, provider metadata, and free-form notes are not mirrored to local log files.
 - Provider tests using fake HTTP/process runners.
+- App view-model tests may target `net8.0-windows` to reference the WPF app project, but they must not launch windows or require an interactive desktop session.
 
 No integration test may use real app data paths.
 
@@ -176,11 +177,31 @@ Required filters:
 Baseline:
 
 ```powershell
+.\tools\validate.ps1
+```
+
+This script redirects .NET and NuGet home/cache paths into ignored repo-local
+folders before running:
+
+```powershell
 dotnet --info
-dotnet restore
-dotnet build
-dotnet test
+dotnet restore .\FileIntakeAssistant.sln --configfile .\NuGet.config -p:NuGetAudit=false
+dotnet build .\FileIntakeAssistant.sln --no-restore
+dotnet test .\FileIntakeAssistant.sln --no-build --verbosity normal
 git status --short
 ```
 
-Milestone-specific filters are listed in `docs/PLAN.md`.
+Milestone-specific filters are listed in `docs/PLAN.md`. If restore is blocked
+by network access after the repo-local script is used, record the blocker and
+run `--no-restore` validation only when project, package, and lock files are
+unchanged.
+
+For logging changes, also run:
+
+```powershell
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Logging --verbosity normal
+```
+
+The script disables the online NuGet audit lookup for sandbox validation to
+avoid network-only `NU1900` failures under `TreatWarningsAsErrors`; package
+versions are still pinned centrally and restored from lock files.

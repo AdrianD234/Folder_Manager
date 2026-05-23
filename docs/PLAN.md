@@ -691,3 +691,266 @@ Stop conditions:
 Expected files changed:
 
 - App UI, docs, tests as needed, status/risk docs.
+
+## Post-12 Remediation Milestones
+`docs/COMPLETION_AUDIT.md` found that the original milestone sequence delivered the Core/Infrastructure foundations and a WPF shell, but did not complete all integrated user workflows required by `docs/GOAL.md` and `docs/SPEC.md`.
+
+These remediation milestones are now part of the active plan unless explicitly superseded by a user-approved decision.
+
+## Milestone 13: App Settings, Intake Folder Wiring, And Candidate Queue UI
+Objective: Wire explicit intake folder configuration into the WPF app without broadening watch scope.
+
+Deliverables:
+
+- Settings view for enabled intake folders using SQLite-backed `intake_folders`.
+- Disabled Downloads suggestion that the user can explicitly enable.
+- Add/remove/enable/disable intake folder controls.
+- Recursive flag display/editing.
+- App startup composition for configured watcher services without watching broad roots.
+- Candidate queue view for meaningful files from configured temp/intake folders.
+- Persistent file event audit rows for observed, ignored, and candidate events.
+
+Acceptance criteria:
+
+- App watches only enabled folders from SQLite.
+- Drive roots, whole user profile roots, AppData, Program Files, Windows, repo roots, and project folders are rejected or ignored according to docs.
+- Downloads is not watched until explicitly enabled.
+- Meaningful stable candidates can appear in the UI queue.
+- Noise and batch-suppressed events are logged without prompting.
+- No file move, rename, overwrite, or delete path is added.
+
+Automated tests required:
+
+- View model tests for adding/removing/enabling/disabling intake folders.
+- Tests proving Downloads starts as a disabled suggestion.
+- Tests proving broad roots are rejected before watcher construction.
+- Tests proving ignored events create audit rows and do not enter the candidate queue.
+- Tests proving meaningful temp-folder candidates enter the UI-facing queue.
+
+Manual smoke tests required:
+
+- Launch app.
+- Add a temp intake folder.
+- Confirm it appears enabled.
+- Create a fake completed PDF in the temp intake folder.
+- Confirm candidate queue shows the file.
+- Create `.crdownload` and `node_modules` examples and confirm no prompt/candidate.
+
+Validation commands:
+
+```powershell
+.\tools\validate.ps1
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Watcher --verbosity normal
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Intake --verbosity normal
+git --no-pager diff --check
+git --no-pager status --short --branch
+```
+
+Risks:
+
+- Prompt fatigue from duplicate watcher events.
+- Accidentally watching broad folders.
+- UI hiding skipped-event audit details.
+
+Stop conditions:
+
+- Any implementation watches a drive root, whole user profile, real Downloads, Desktop, OneDrive, repo root, AppData, Program Files, or Windows folder without explicit manual approval.
+- Any automated test uses real user folders.
+- Candidate queue display requires moving or renaming files.
+
+Expected files changed:
+
+- App view models/windows, app composition, Core intake queue models if needed, Infrastructure watcher/persistence adapters, tests, `docs/STATUS.md`, `docs/RISK_REGISTER.md`, possibly `docs/DECISIONS.md`.
+
+## Milestone 14: Watcher-Driven Intake Popup And Manual Transcript Workflow
+Objective: Connect watcher candidates to a dismissible intake popup that saves metadata and reviewed transcript text to SQLite.
+
+Deliverables:
+
+- Intake popup/window for candidate files with file name, path, type, size, triage reason, and stability/batch evidence.
+- Manual note and manual transcript fields.
+- Relevance, project, topic, tags, and source URL controls.
+- Dismiss/skip action with audit logging.
+- Save metadata action using existing SQLite workflow.
+- Provider-status display that keeps OpenAI and local transcription disabled unless configured.
+- No-key/manual mode as the default behavior.
+
+Acceptance criteria:
+
+- Watcher candidate can open a popup without modifying the file.
+- User can save metadata and reviewed transcript text to SQLite.
+- User can dismiss or skip and the action is logged.
+- Manual text fallback works when no provider is configured.
+- No microphone hardware or OpenAI key is required.
+- No private metadata is written into the target file or a sidecar.
+
+Automated tests required:
+
+- View model tests for candidate-to-popup state.
+- Save metadata from candidate test.
+- Skip/dismiss audit action test.
+- No-key/manual transcript fallback test.
+- Test proving target temp file content and timestamp are unchanged.
+
+Manual smoke tests required:
+
+- Configure temp intake folder.
+- Create fake completed PDF.
+- Confirm popup appears.
+- Save note and transcript metadata.
+- Confirm SQLite metadata exists.
+- Confirm file content and metadata are unchanged.
+- Dismiss another candidate and confirm no metadata row is created except audit.
+
+Validation commands:
+
+```powershell
+.\tools\validate.ps1
+dotnet test .\FileIntakeAssistant.sln --no-build --filter ManualMetadata --verbosity normal
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Transcription --verbosity normal
+git --no-pager diff --check
+git --no-pager status --short --branch
+```
+
+Risks:
+
+- Popup fatigue.
+- Accidentally treating provider transcript as reviewed user metadata.
+- UI scope expanding into real microphone work too early.
+
+Stop conditions:
+
+- Workflow requires OpenAI, microphone hardware, Everything, or a real API key.
+- Workflow writes metadata into files or sidecars.
+- Popup starts recording audio silently.
+
+Expected files changed:
+
+- App popup/window/view models, Core metadata/transcription workflow glue if needed, Infrastructure persistence tests, manual smoke docs, status/risk docs.
+
+## Milestone 15: Safe Filing Confirmation, Undo UI, And Confirmed Retrieval Actions
+Objective: Add user-facing confirmation surfaces for file move/rename, undo, and search-result open actions.
+
+Deliverables:
+
+- Suggested filename/folder preview UI using deterministic planner.
+- Explicit confirmation dialog before move or rename.
+- Undo list/action UI for app-performed move/rename operations.
+- Search result selection UI for open file and open containing folder.
+- Confirmation before opening multiple files or folders.
+- Action logging for confirmed, cancelled, failed, and undo operations.
+
+Acceptance criteria:
+
+- Move/rename preview shows source, destination, conflict resolution, and extension behavior before confirmation.
+- Unconfirmed move/rename does nothing and creates no destination folder.
+- Confirmed move/rename goes through the safe operation service.
+- Undo verifies identity and fails safely on conflict.
+- Search UI does not blindly open ambiguous or multi-result commands.
+- No delete or overwrite path exists.
+
+Automated tests required:
+
+- View model tests for preview and confirmation-required state.
+- Confirmation refusal test proving no filesystem mutation.
+- Confirmed move/rename tests remain temp-directory only.
+- Undo UI workflow tests for success, conflict, and identity mismatch.
+- Search result open action tests for single result, multiple confirmation, and ambiguity display.
+
+Manual smoke tests required:
+
+- In a temp intake folder, preview a move/rename.
+- Cancel and confirm no file changed.
+- Confirm move/rename and verify action/undo records.
+- Undo and verify file returns when safe.
+- Run `open the last five Excel files I saved` against temp DB records and confirm bulk-open prompt appears.
+- Open a containing folder only after explicit confirmation.
+
+Validation commands:
+
+```powershell
+.\tools\validate.ps1
+dotnet test .\FileIntakeAssistant.sln --no-build --filter SafeFileOperations --verbosity normal
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Undo --verbosity normal
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Search --verbosity normal
+git --no-pager diff --check
+git --no-pager status --short --branch
+```
+
+Risks:
+
+- Accidental overwrite.
+- Incorrect undo.
+- Opening too many files from an ambiguous command.
+- Manual smoke tests accidentally touching real user files.
+
+Stop conditions:
+
+- Any UI path can move, rename, overwrite, delete, or bulk-open without explicit confirmation.
+- Automated tests mutate non-temp folders.
+- Undo can overwrite the original path.
+
+Expected files changed:
+
+- App safe-operation/search UI, view models, tests, manual smoke docs, status/risk docs.
+
+## Milestone 16: Interactive Smoke Pass And Release Readiness
+Objective: Run and record the Windows interactive smoke tests, update release readiness, and close or explicitly defer remaining gaps.
+
+Deliverables:
+
+- Completed `docs/MANUAL_SMOKE_TESTS.md` run records for available workflows.
+- Updated `docs/COMPLETION_AUDIT.md` final verdict.
+- Updated `docs/STATUS.md` with final validation and manual smoke results.
+- Updated `docs/PACKAGING.md` with release limitations and local publish guidance.
+- Final risk register review.
+- Final self-review against safety/privacy invariants.
+
+Acceptance criteria:
+
+- `tools/validate.ps1` passes.
+- Interactive tray startup, tray menu, hide-to-tray, and exit are smoke-tested.
+- Intake folder configuration and candidate popup are smoke-tested against temp folders only unless user explicitly approves another folder.
+- Metadata save, safe move/rename confirmation, undo, and search confirmation flows are smoke-tested.
+- Any unrun manual smoke test is documented with reason and explicit deferral status.
+- No known safety or privacy invariant violation remains.
+
+Automated tests required:
+
+- Full suite.
+
+Manual smoke tests required:
+
+- All applicable tests in `docs/MANUAL_SMOKE_TESTS.md`.
+
+Validation commands:
+
+```powershell
+.\tools\validate.ps1
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Logging --verbosity normal
+dotnet publish .\src\FileIntakeAssistant.App\FileIntakeAssistant.App.csproj -c Release -r win-x64 --self-contained false -o .\artifacts\publish\FileIntakeAssistant-win-x64
+.\tools\publish-local.ps1
+.\tools\check-publish-artifact.ps1
+.\tools\new-smoke-fixtures.ps1 -PlanOnly
+.\tools\check-release-readiness.ps1
+git --no-pager diff --check
+git --no-pager status --short --branch
+```
+
+If the runtime-specific `win-x64` publish restore is blocked by restricted network access or missing cached runtime packs, record the exact error in `docs/STATUS.md` and run `.\tools\publish-local.ps1` as the sandbox-safe no-RID framework-dependent publish check. Do not commit `artifacts/` output.
+
+Risks:
+
+- Manual testing uncovers OS-specific tray or hotkey behavior.
+- Publish output accidentally enters source control.
+- User accepts deferral for too many product-critical gaps.
+
+Stop conditions:
+
+- Manual smoke tests reveal a safety/privacy violation.
+- Publish requires adding installer/signing/autostart scope without a decision.
+- Any release artifact includes database, logs, temp audio, secrets, or local app-data files.
+
+Expected files changed:
+
+- Manual smoke docs, completion audit, status, packaging docs, risk register, possible tests or small fixes.

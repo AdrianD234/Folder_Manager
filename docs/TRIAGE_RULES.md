@@ -89,7 +89,8 @@ Default checks:
 Hashing:
 
 - Compute SHA-256 for ordinary stable files below the configured hash threshold.
-- Defer hash for large files.
+- Initial hash threshold: 100 MB.
+- Defer hash for files above the threshold.
 - Never repeatedly hash huge files during active changes.
 
 ## Debounce Windows

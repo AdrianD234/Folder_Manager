@@ -29,6 +29,16 @@ Rules:
 - Settings must clearly show provider status.
 - Runtime OpenAI API usage is separate from ChatGPT/Codex credits.
 
+Current OpenAI transcription implementation:
+
+- Uses an optional Infrastructure `HttpClient` adapter behind `ITranscriptionProvider`.
+- Is disabled unless configured.
+- Reads the API key from an environment-variable source, defaulting to `OPENAI_API_KEY`.
+- Returns `NotConfigured` without making an HTTP call when disabled or missing a key.
+- Redacts the configured API key from provider error messages before they can be persisted.
+- Does not add an OpenAI SDK dependency.
+- Has only fake-HTTP automated tests; no test calls live OpenAI.
+
 ## Secrets
 - API keys must not be committed.
 - API keys must not be logged.
@@ -53,6 +63,12 @@ Logs should contain:
 - Operation status.
 - Triage decisions.
 - Provider names.
+
+The structured local JSON-lines audit log mirrors persisted workflow and audit
+events, but it must log only summaries for private payloads. It may log paths
+for local auditability, but it must not mirror raw user notes, transcript text,
+provider metadata JSON, provider error bodies, raw search/voice command text,
+or API keys.
 - Error classes and safe messages.
 
 ## Audio

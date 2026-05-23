@@ -2,7 +2,7 @@
 
 Always start by reading the repository root `AGENTS.md`.
 
-Use `docs/STATUS.md` as the source of truth for the active milestone. Use `docs/GOAL.md` as the long-running goal contract. Follow `docs/EXECUTION.md` for the runbook and `docs/PLAN.md` for milestone scope, acceptance criteria, validation commands, risks, stop conditions, and expected file changes.
+Use `docs/STATUS.md` as the source of truth for the active milestone. Use `docs/GOAL.md` as the long-running goal contract. Use `docs/COMPLETION_AUDIT.md` for the current gap analysis before claiming product completion. Follow `docs/EXECUTION.md` for the runbook and `docs/PLAN.md` for milestone scope, acceptance criteria, validation commands, risks, stop conditions, and expected file changes.
 
 ## Rules
 - Do not implement beyond the current milestone in `docs/STATUS.md`.

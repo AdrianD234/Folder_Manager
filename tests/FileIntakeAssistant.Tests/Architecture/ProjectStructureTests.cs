@@ -46,6 +46,26 @@ public sealed class ProjectStructureTests
 
         Assert.Equal("net8.0-windows", PropertyValue(appProject, "TargetFramework"));
         Assert.Equal("true", PropertyValue(appProject, "UseWPF"));
+        Assert.Equal("true", PropertyValue(appProject, "UseWindowsForms"));
+    }
+
+    [Fact]
+    public void AppContainsTrayAndHotkeyShellBoundaries()
+    {
+        var root = FindRepositoryRoot();
+
+        Assert.True(File.Exists(Path.Combine(
+            root,
+            "src",
+            "FileIntakeAssistant.App",
+            "Shell",
+            "TrayIconController.cs")));
+        Assert.True(File.Exists(Path.Combine(
+            root,
+            "src",
+            "FileIntakeAssistant.App",
+            "Shell",
+            "GlobalHotkeyController.cs")));
     }
 
     private static XDocument LoadProject(string root, params string[] pathParts)

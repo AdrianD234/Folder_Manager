@@ -8,6 +8,20 @@
 - Bulk opening requires confirmation.
 - No destructive commands are supported.
 
+## Current Implementation
+Milestones 10, 11, and 15 implement the first deterministic retrieval path, optional Everything enrichment, and confirmed user-facing open actions:
+
+- Core `SearchIntentParser` parses supported text/voice commands without OpenAI.
+- Core search workflow records `voice_commands` and `search_queries`.
+- Infrastructure `SqliteSearchProvider` searches file records, metadata entries, and folder context.
+- Infrastructure `EverythingCliSearchProvider` can parse optional `es.exe` path output when explicitly enabled and available.
+- Infrastructure `CompositeFileSearchProvider` merges Everything path hits into SQLite results while preserving SQLite metadata as authoritative.
+- The WPF shell displays selectable ranked results in a Search tab.
+- Single-file, containing-folder, and bulk-open actions are routed through an App-layer confirmation and file-launch boundary.
+- Multiple open results require confirmation and cancellation is logged without launching anything.
+- Destructive commands are rejected before provider search.
+- Everything CLI remains disabled by default and is not required for app operation or tests.
+
 ## SQLite-First Search
 SQLite is queried for:
 
@@ -28,17 +42,21 @@ SQLite is queried for:
 SQLite remains the source of truth for private metadata.
 
 ## Optional Everything Search Provider
-Everything CLI integration may be added later through `IFileSearchProvider`.
+Everything CLI integration is available through `IFileSearchProvider` as optional enrichment.
 
 Rules:
 
 - Disabled by default.
 - Requires configured or discovered `es.exe`.
+- Requires configured allowed roots before invoking `es.exe`.
 - Tests use fake process runner.
 - App works if Everything is unavailable.
 - Everything results may enrich file discovery.
 - Everything must not become metadata source of truth.
 - No Everything SDK dependency in v1.
+- Missing or failing `es.exe` must fail closed to SQLite-only results.
+- Missing allowed roots must fail closed to SQLite-only results.
+- Everything-only results cannot satisfy SQLite-only metadata filters such as relevance, project, topic, date, or downloaded source unless they merge with a SQLite metadata result.
 
 ## File System Fallback
 File system fallback can verify:

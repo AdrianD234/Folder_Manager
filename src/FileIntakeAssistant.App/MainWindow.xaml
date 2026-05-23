@@ -1,12 +1,536 @@
-﻿<Window x:Class="FileIntakeAssistant.App.MainWindow"
+<Window x:Class="FileIntakeAssistant.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fileOps="clr-namespace:FileIntakeAssistant.Core.FileOperations;assembly=FileIntakeAssistant.Core"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:FileIntakeAssistant.App"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="File Intake Assistant" Height="700" Width="820"
+        MinHeight="640" MinWidth="720"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
+        <TextBlock Grid.Row="0"
+                   Text="File Intake Assistant"
+                   FontSize="22"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,18" />
+
+        <TabControl x:Name="MainTabs" Grid.Row="1">
+            <TabItem x:Name="IntakeTab" Header="Intake">
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="File"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,12,0" />
+                        <TextBox Grid.Column="1"
+                                 Text="{Binding Manual.FilePath, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="30"
+                                 VerticalContentAlignment="Center" />
+                        <Button Grid.Column="2"
+                                Content="Browse"
+                                Click="Browse_Click"
+                                MinWidth="84"
+                                Margin="10,0,0,0" />
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="Note"
+                                   Margin="0,4,12,0" />
+                        <TextBox Grid.Row="0"
+                                 Grid.Column="1"
+                                 Text="{Binding Manual.UserNote, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinHeight="120"
+                                 VerticalScrollBarVisibility="Auto" />
+
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="Transcript"
+                                   Margin="0,14,12,0" />
+                        <TextBox Grid.Row="1"
+                                 Grid.Column="1"
+                                 Text="{Binding Manual.TranscriptText, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinHeight="84"
+                                 Margin="0,10,0,0"
+                                 VerticalScrollBarVisibility="Auto" />
+
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="0"
+                                   Text="Relevance"
+                                   VerticalAlignment="Center"
+                                   Margin="0,14,12,0" />
+                        <ComboBox Grid.Row="2"
+                                  Grid.Column="1"
+                                  SelectedValue="{Binding Manual.Relevance, UpdateSourceTrigger=PropertyChanged}"
+                                  SelectedValuePath="Content"
+                                  Margin="0,10,0,0"
+                                  MinHeight="30">
+                            <ComboBoxItem Content="low" />
+                            <ComboBoxItem Content="medium" IsSelected="True" />
+                            <ComboBoxItem Content="high" />
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="3"
+                                   Grid.Column="0"
+                                   Text="Project"
+                                   VerticalAlignment="Center"
+                                   Margin="0,14,12,0" />
+                        <TextBox Grid.Row="3"
+                                 Grid.Column="1"
+                                 Text="{Binding Manual.Project, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,10,0,0"
+                                 MinHeight="30"
+                                 VerticalContentAlignment="Center" />
+
+                        <TextBlock Grid.Row="4"
+                                   Grid.Column="0"
+                                   Text="Topic"
+                                   VerticalAlignment="Center"
+                                   Margin="0,14,12,0" />
+                        <TextBox Grid.Row="4"
+                                 Grid.Column="1"
+                                 Text="{Binding Manual.Topic, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,10,0,0"
+                                 MinHeight="30"
+                                 VerticalContentAlignment="Center" />
+
+                        <Grid Grid.Row="5" Grid.ColumnSpan="2" Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       Text="Tags"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0" />
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding Manual.Tags, UpdateSourceTrigger=PropertyChanged}"
+                                     MinHeight="30"
+                                     VerticalContentAlignment="Center" />
+                            <TextBlock Grid.Column="2"
+                                       Text="Source URL"
+                                       VerticalAlignment="Center"
+                                       Margin="18,0,12,0" />
+                            <TextBox Grid.Column="3"
+                                     Text="{Binding Manual.SourceUrl, UpdateSourceTrigger=PropertyChanged}"
+                                     MinHeight="30"
+                                     VerticalContentAlignment="Center" />
+                        </Grid>
+                    </Grid>
+
+                    <DockPanel Grid.Row="2" Margin="0,18,0,0">
+                        <TextBlock Text="{Binding Manual.StatusMessage}"
+                                   VerticalAlignment="Center"
+                                   DockPanel.Dock="Left" />
+                        <Button Content="Save Metadata"
+                                Command="{Binding Manual.SaveCommand}"
+                                MinWidth="126"
+                                MinHeight="34"
+                                HorizontalAlignment="Right"
+                                DockPanel.Dock="Right" />
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Folders">
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <DataGrid Grid.Row="0"
+                              ItemsSource="{Binding IntakeFolders.Folders}"
+                              SelectedItem="{Binding IntakeFolders.SelectedFolder, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              MinHeight="220">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="150" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" />
+                            <DataGridCheckBoxColumn Header="Recursive" Binding="{Binding Recursive}" Width="90" />
+                            <DataGridTextColumn Header="Type" Binding="{Binding FolderType}" Width="110" />
+                            <DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Grid Grid.Row="1" Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="160" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding IntakeFolders.NewFolderPath, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="32"
+                                 VerticalContentAlignment="Center" />
+                        <TextBox Grid.Column="1"
+                                 Text="{Binding IntakeFolders.NewDisplayName, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="32"
+                                 Margin="10,0,0,0"
+                                 VerticalContentAlignment="Center" />
+                        <CheckBox Grid.Column="2"
+                                  Content="Recursive"
+                                  IsChecked="{Binding IntakeFolders.NewRecursive}"
+                                  VerticalAlignment="Center"
+                                  Margin="12,0,0,0" />
+                        <Button Grid.Column="3"
+                                Content="Add Folder"
+                                Command="{Binding IntakeFolders.AddCommand}"
+                                MinWidth="96"
+                                MinHeight="32"
+                                Margin="12,0,0,0" />
+                    </Grid>
+
+                    <DockPanel Grid.Row="2" Margin="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                            <Button Content="Refresh"
+                                    Command="{Binding IntakeFolders.RefreshCommand}"
+                                    MinWidth="84"
+                                    MinHeight="32"
+                                    Margin="0,0,8,0" />
+                            <Button Content="Enable"
+                                    Command="{Binding IntakeFolders.EnableCommand}"
+                                    MinWidth="84"
+                                    MinHeight="32"
+                                    Margin="0,0,8,0" />
+                            <Button Content="Disable"
+                                    Command="{Binding IntakeFolders.DisableCommand}"
+                                    MinWidth="84"
+                                    MinHeight="32"
+                                    Margin="0,0,8,0" />
+                            <Button Content="Remove"
+                                    Command="{Binding IntakeFolders.RemoveCommand}"
+                                    MinWidth="84"
+                                    MinHeight="32" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding IntakeFolders.StatusMessage}"
+                                   VerticalAlignment="Center" />
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Candidates">
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="150" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <DataGrid Grid.Row="0"
+                              ItemsSource="{Binding Candidates.Candidates}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              MinHeight="220">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="File" Binding="{Binding FileName}" Width="170" />
+                            <DataGridTextColumn Header="Type" Binding="{Binding Extension}" Width="70" />
+                            <DataGridTextColumn Header="Size" Binding="{Binding SizeBytes}" Width="90" />
+                            <DataGridTextColumn Header="Reason" Binding="{Binding TriageReason}" Width="*" />
+                            <DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="220" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBox Grid.Row="1"
+                             Text="{Binding Candidates.AuditText}"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             TextWrapping="NoWrap"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             Margin="0,12,0,0" />
+
+                    <DockPanel Grid.Row="2" Margin="0,12,0,0">
+                        <TextBlock Text="{Binding Candidates.StatusMessage}"
+                                   VerticalAlignment="Center"
+                                   DockPanel.Dock="Left" />
+                        <Button Content="Refresh"
+                                Command="{Binding Candidates.RefreshCommand}"
+                                MinWidth="96"
+                                MinHeight="32"
+                                HorizontalAlignment="Right"
+                                DockPanel.Dock="Right" />
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Filing">
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Text="File record ID"
+                               Margin="0,4,12,0" />
+                    <Grid Grid.Row="0" Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Row="0"
+                                 Grid.Column="0"
+                                 Text="{Binding Filing.FileRecordId, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="30"
+                                 VerticalContentAlignment="Center" />
+                        <ComboBox Grid.Row="0"
+                                  Grid.Column="1"
+                                  SelectedValue="{Binding Filing.OperationKind, UpdateSourceTrigger=PropertyChanged}"
+                                  SelectedValuePath="Tag"
+                                  MinWidth="110"
+                                  MinHeight="30"
+                                  Margin="10,0,0,0">
+                            <ComboBoxItem Content="Move" Tag="{x:Static fileOps:SafeFileOperationKind.Move}" IsSelected="True" />
+                            <ComboBoxItem Content="Rename" Tag="{x:Static fileOps:SafeFileOperationKind.Rename}" />
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="Source path"
+                                   Margin="0,12,0,4" />
+                        <TextBox Grid.Row="2"
+                                 Grid.ColumnSpan="2"
+                                 Text="{Binding Filing.SourcePath, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="30"
+                                 VerticalContentAlignment="Center" />
+
+                        <TextBlock Grid.Row="3"
+                                   Text="Destination folder"
+                                   Margin="0,12,0,4" />
+                        <TextBox Grid.Row="4"
+                                 Grid.ColumnSpan="2"
+                                 Text="{Binding Filing.DestinationDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="30"
+                                 VerticalContentAlignment="Center" />
+                    </Grid>
+
+                    <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,14,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="Requested name"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0" />
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding Filing.RequestedFileName, UpdateSourceTrigger=PropertyChanged}"
+                                     MinHeight="30"
+                                     VerticalContentAlignment="Center" />
+                        </Grid>
+
+                        <TextBox Grid.Row="1"
+                                 Text="{Binding Filing.PreviewText}"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Margin="0,12,0,0" />
+                    </Grid>
+
+                    <DockPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                            <Button Content="Preview"
+                                    Command="{Binding Filing.RefreshPreviewCommand}"
+                                    MinWidth="90"
+                                    MinHeight="32"
+                                    Margin="0,0,8,0" />
+                            <Button Content="Confirm Move/Rename"
+                                    Command="{Binding Filing.ConfirmOperationCommand}"
+                                    MinWidth="152"
+                                    MinHeight="32" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Filing.StatusMessage}"
+                                   VerticalAlignment="Center" />
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Undo">
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <DataGrid Grid.Row="0"
+                              ItemsSource="{Binding UndoActions.UndoActions}"
+                              SelectedItem="{Binding UndoActions.SelectedUndoAction, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60" />
+                            <DataGridTextColumn Header="Type" Binding="{Binding UndoType}" Width="100" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" />
+                            <DataGridTextColumn Header="Current" Binding="{Binding ResultingPath}" Width="*" />
+                            <DataGridTextColumn Header="Original" Binding="{Binding OriginalPath}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <DockPanel Grid.Row="1" Margin="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                            <Button Content="Refresh"
+                                    Command="{Binding UndoActions.RefreshCommand}"
+                                    MinWidth="90"
+                                    MinHeight="32"
+                                    Margin="0,0,8,0" />
+                            <Button Content="Undo Selected"
+                                    Command="{Binding UndoActions.UndoCommand}"
+                                    MinWidth="116"
+                                    MinHeight="32" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding UndoActions.StatusMessage}"
+                                   VerticalAlignment="Center" />
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem x:Name="SearchTab" Header="Search">
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox x:Name="SearchCommandTextBox"
+                                 Grid.Column="0"
+                                 Text="{Binding Search.CommandText, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="34"
+                                 VerticalContentAlignment="Center" />
+                        <Button Grid.Column="1"
+                                Content="Search"
+                                Command="{Binding Search.RunCommand}"
+                                MinWidth="96"
+                                MinHeight="34"
+                                Margin="10,0,0,0" />
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="2*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <DataGrid Grid.Row="0"
+                                  ItemsSource="{Binding Search.Results}"
+                                  SelectedItem="{Binding Search.SelectedResult, Mode=TwoWay}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="180" />
+                                <DataGridTextColumn Header="Target" Binding="{Binding Target}" Width="80" />
+                                <DataGridTextColumn Header="Relevance" Binding="{Binding Relevance}" Width="90" />
+                                <DataGridTextColumn Header="Project" Binding="{Binding Project}" Width="130" />
+                                <DataGridTextColumn Header="Topic" Binding="{Binding Topic}" Width="120" />
+                                <DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <TextBox Grid.Row="1"
+                                 Text="{Binding Search.ResultsText}"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Margin="0,10,0,0" />
+                    </Grid>
+
+                    <DockPanel Grid.Row="2" Margin="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                            <Button Content="Open File"
+                                    Command="{Binding Search.OpenSelectedFileCommand}"
+                                    MinWidth="90"
+                                    MinHeight="32"
+                                    Margin="0,0,8,0" />
+                            <Button Content="Open Folder"
+                                    Command="{Binding Search.OpenContainingFolderCommand}"
+                                    MinWidth="102"
+                                    MinHeight="32"
+                                    Margin="0,0,8,0" />
+                            <Button Content="Open All"
+                                    Command="{Binding Search.OpenAllCommand}"
+                                    MinWidth="90"
+                                    MinHeight="32" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Search.StatusMessage}"
+                                   VerticalAlignment="Center" />
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

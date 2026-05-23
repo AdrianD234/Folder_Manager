@@ -23,7 +23,7 @@ The app is designed to help a user answer questions such as:
 - Keep OpenAI and Everything integrations optional.
 
 ## Current State
-This repository is in Milestone 0: governance, architecture, and planning. No app implementation exists yet.
+The repository is being implemented milestone by milestone. The authoritative active milestone and validation status are recorded in [docs/STATUS.md](docs/STATUS.md).
 
 Read these first:
 
@@ -33,12 +33,13 @@ Read these first:
 - [docs/PLAN.md](docs/PLAN.md)
 - [docs/EXECUTION.md](docs/EXECUTION.md)
 - [docs/STATUS.md](docs/STATUS.md)
+- [docs/PACKAGING.md](docs/PACKAGING.md)
 
 ## Planned Stack
 - .NET 8 or newer
 - Windows-native desktop app
-- WPF tray app
-- Global hotkeys
+- WPF tray shell
+- Global hotkey boundary
 - SQLite via `Microsoft.Data.Sqlite`
 - Structured local logging via Serilog or equivalent
 - MVVM support via CommunityToolkit.Mvvm or equivalent
@@ -56,13 +57,21 @@ Read these first:
 Automated tests must not use these real locations. Tests use temporary directories and temporary databases only.
 
 ## Command Line Validation
-After Milestone 1 creates the solution and projects, the repository must validate with:
+Use the repo-local validation helper in Codex or other restricted environments:
+
+```powershell
+.\tools\validate.ps1
+```
+
+It redirects .NET and NuGet cache/home paths into ignored workspace folders before restore, build, test, and status checks.
+
+The equivalent baseline command set is:
 
 ```powershell
 dotnet --info
-dotnet restore
-dotnet build
-dotnet test
+dotnet restore .\FileIntakeAssistant.sln --configfile .\NuGet.config
+dotnet build .\FileIntakeAssistant.sln --no-restore
+dotnet test .\FileIntakeAssistant.sln --no-build --verbosity normal
 git status --short
 ```
 

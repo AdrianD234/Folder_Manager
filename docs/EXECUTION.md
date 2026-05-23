@@ -11,7 +11,8 @@ Before implementing a milestone, read:
 4. `docs/PLAN.md`
 5. `docs/TESTING.md`
 6. `docs/STATUS.md`
-7. Any milestone-specific docs such as `docs/TRIAGE_RULES.md`, `docs/DATA_MODEL.md`, `docs/VOICE_WORKFLOWS.md`, or `docs/SEARCH_RETRIEVAL.md`.
+7. `docs/COMPLETION_AUDIT.md` when the repo is past Milestone 12 or when claiming product completion.
+8. Any milestone-specific docs such as `docs/TRIAGE_RULES.md`, `docs/DATA_MODEL.md`, `docs/VOICE_WORKFLOWS.md`, or `docs/SEARCH_RETRIEVAL.md`.
 
 Then inspect the current repo state:
 
@@ -19,6 +20,21 @@ Then inspect the current repo state:
 git status --short --branch
 dotnet --info
 ```
+
+When running inside Codex or another restricted environment, prefer the
+repo-local validation script so NuGet and .NET do not read or write the real
+Windows profile:
+
+```powershell
+.\tools\validate.ps1
+```
+
+The script sets `DOTNET_CLI_HOME`, `APPDATA`, `NUGET_PACKAGES`, and
+`NUGET_HTTP_CACHE_PATH` to ignored workspace-local folders before running
+`dotnet --info`, restore, build, test, and `git status --short`. It disables
+the online NuGet audit lookup for this sandbox-safe restore route because
+blocked network access otherwise becomes warning-as-error `NU1900`; lock files
+remain enabled and authoritative for package versions.
 
 ## Work One Milestone At A Time
 - Select the current milestone from `docs/STATUS.md`.
@@ -41,6 +57,11 @@ After implementation:
 8. State the next milestone.
 
 Do not claim success unless commands were actually run. If a command could not be run, say why and record it in `docs/STATUS.md`.
+
+If restore fails because network access is blocked after using
+`tools/validate.ps1`, record the exact blocker in `docs/STATUS.md`. Continue
+with `--no-restore` build/test commands only when project, package, and lock
+files have not changed.
 
 ## Failure Handling
 If validation fails:

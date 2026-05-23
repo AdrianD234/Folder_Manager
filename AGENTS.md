@@ -32,6 +32,7 @@ global.json
 docs/
   SPEC.md
   GOAL.md
+  COMPLETION_AUDIT.md
   ARCHITECTURE.md
   PLAN.md
   EXECUTION.md
@@ -45,6 +46,7 @@ docs/
   SEARCH_RETRIEVAL.md
   SECURITY_PRIVACY.md
   MANUAL_SMOKE_TESTS.md
+  PACKAGING.md
 .codex/
   AGENTS.md
   config.example.toml
@@ -58,7 +60,7 @@ tools/
   README.md
 ```
 
-The `src/` and `tests/` projects are created in Milestone 1. Do not add implementation code during Milestone 0.
+The `src/` and `tests/` projects were created in Milestone 1. Use `docs/STATUS.md` for the active milestone and current scope. The Milestone 0 "no implementation code" restriction applies only when `docs/STATUS.md` says Milestone 0 is active.
 
 ## Build And Test Commands
 Run these from the repository root:
@@ -114,6 +116,7 @@ Do not report tests as passing unless the commands were actually run and complet
 
 ## Planning And Execution Documents
 - `docs/GOAL.md` is the long-running implementation contract. Read it before implementation work.
+- `docs/COMPLETION_AUDIT.md` records the current gap analysis against the long-running goal. Read it before claiming product completion.
 - `docs/PLAN.md` is the milestone source of truth.
 - `docs/EXECUTION.md` is the runbook for how agents work through milestones.
 - `docs/STATUS.md` must be updated after each milestone or blocked attempt.
