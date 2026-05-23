@@ -100,6 +100,18 @@ public sealed class JsonLinesLocalAuditLog : ILocalAuditLog
             return "[redacted]";
         }
 
+        if (IsPrivatePayloadKey(key))
+        {
+            return value is string privatePayload
+                ? new
+                {
+                    redacted = true,
+                    length = privatePayload.Length,
+                    present = !string.IsNullOrWhiteSpace(privatePayload)
+                }
+                : "[redacted]";
+        }
+
         if (value is string text)
         {
             return OpenAiStyleSecretPattern.Replace(text, "[redacted]");
@@ -114,6 +126,21 @@ public sealed class JsonLinesLocalAuditLog : ILocalAuditLog
             || key.Contains("secret", StringComparison.OrdinalIgnoreCase)
             || key.Contains("token", StringComparison.OrdinalIgnoreCase)
             || key.Contains("password", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsPrivatePayloadKey(string key)
+    {
+        return key.Contains("userNote", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("transcript", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("providerMetadata", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("audioPath", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("sourceUrl", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("referrerUrl", StringComparison.OrdinalIgnoreCase)
+            || key.Equals("rawText", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("queryText", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("providerRequest", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("providerResponse", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("errorBody", StringComparison.OrdinalIgnoreCase);
     }
 
     private sealed record LocalAuditLogEntry(

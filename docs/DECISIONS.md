@@ -456,3 +456,55 @@ Add `tools/new-smoke-run-report.ps1` to create a manual smoke run-report templat
 
 Consequences:
 User-approved or user-run smoke passes now have a repeatable reporting surface. The report helper does not launch the app, create fixtures, mutate user folders, run providers, or prove smoke results by itself.
+
+## Decision 0036: File And Folder Launch Requires Existing Local Filesystem Paths
+Status: Accepted
+Date: 2026-05-23
+
+Context:
+Pre-smoke hardening found that the App-layer launch service delegated arbitrary strings to the Windows shell after confirmation. Retrieval confirmation must not become a way to launch URLs, `shell:` targets, relative paths, file URI strings, or nonexistent paths.
+
+Decision:
+Harden `WindowsFileLaunchService` so `OpenFileAsync` opens only existing fully qualified file paths and `OpenFolderAsync` opens only existing fully qualified directory paths. Reject blank strings, relative paths, protocol-like targets, `http`/`https`/`file` URI strings, `shell:` targets, and other non-local shell targets before calling `Process.Start`. Keep OS process launching behind an injectable boundary so tests never launch real processes.
+
+Consequences:
+Confirmed retrieval actions remain constrained to local filesystem paths already present on disk. Future support for URLs or special shell targets requires a separate documented decision and safety review.
+
+## Decision 0037: App File Operations Register Own-Operation Suppressions
+Status: Accepted
+Date: 2026-05-23
+
+Context:
+Core triage already supported own-operation suppression records, but pre-smoke hardening found that App-performed move/rename operations were not centrally registered into the watcher processing path.
+
+Decision:
+Add a Core `OwnOperationSuppressionRegistry` that records old path, new path, registration time, and suppression window for app-performed moves, renames, and undo moves. `SafeFileOperationExecutor` registers operations around the actual filesystem move. `IntakeWatcherCoordinator` reads active suppressions when building `IntakeProcessingRequest`.
+
+Consequences:
+Watcher events caused by app-performed file operations are suppressed by exact old/new path within a short window without hiding unrelated user-created files. The registry is in-memory and intentionally narrow; persistent suppression history is not required for restart recovery.
+
+## Decision 0038: Candidate Queue Uses Lightweight In-Memory Deduplication
+Status: Accepted
+Date: 2026-05-23
+
+Context:
+The candidate queue is intentionally in-memory for the current UI workflow, but duplicate watcher events for the same path can cause repeated prompts before manual smoke testing.
+
+Decision:
+Keep the candidate queue in-memory, backed by persistent file-event audit rows, and add lightweight deduplication by normalized path within a short observed/stable window. Do not add a durable candidate queue in this hardening pass.
+
+Consequences:
+Duplicate watcher events for the same candidate are suppressed during normal debounce windows, while unrelated paths are unaffected. Restart still loses pending UI candidate state; durable candidate persistence remains a documented follow-up.
+
+## Decision 0039: Minimal Windows CI Validates Build And Tests Only
+Status: Accepted
+Date: 2026-05-23
+
+Context:
+The repository has command-line build/test discipline and package locks. A minimal CI check can catch drift without launching the app, publishing artifacts, or touching user files.
+
+Decision:
+Add `.github/workflows/dotnet.yml` using `windows-latest`, `actions/setup-dotnet` for .NET 8, restore through the repo `NuGet.config`, build with `--no-restore`, and run the test suite with `--no-build`. Do not publish artifacts in CI yet.
+
+Consequences:
+GitHub pushes and pull requests get the same basic restore/build/test gate expected locally. Packaging, artifact safety checks, and manual smoke evidence remain local/user-approved release gates.

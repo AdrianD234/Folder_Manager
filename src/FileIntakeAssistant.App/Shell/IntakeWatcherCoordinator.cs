@@ -16,6 +16,7 @@ public sealed class IntakeWatcherCoordinator : IDisposable
     private readonly IFileStabilitySnapshotReader _snapshotReader;
     private readonly FileStabilityChecker _stabilityChecker;
     private readonly BatchDetector _batchDetector;
+    private readonly IOwnOperationSuppressionRegistry? _ownOperationRegistry;
     private readonly Func<DateTimeOffset> _clock;
     private readonly Func<Task>? _afterProcessedAsync;
     private readonly AppLifecycleAudit? _audit;
@@ -33,6 +34,7 @@ public sealed class IntakeWatcherCoordinator : IDisposable
         IFileStabilitySnapshotReader snapshotReader,
         FileStabilityChecker stabilityChecker,
         BatchDetector batchDetector,
+        IOwnOperationSuppressionRegistry? ownOperationRegistry = null,
         Func<Task>? afterProcessedAsync = null,
         Func<DateTimeOffset>? clock = null,
         AppLifecycleAudit? audit = null)
@@ -42,6 +44,7 @@ public sealed class IntakeWatcherCoordinator : IDisposable
         _snapshotReader = snapshotReader ?? throw new ArgumentNullException(nameof(snapshotReader));
         _stabilityChecker = stabilityChecker ?? throw new ArgumentNullException(nameof(stabilityChecker));
         _batchDetector = batchDetector ?? throw new ArgumentNullException(nameof(batchDetector));
+        _ownOperationRegistry = ownOperationRegistry;
         _afterProcessedAsync = afterProcessedAsync;
         _clock = clock ?? (() => DateTimeOffset.UtcNow);
         _audit = audit;
@@ -196,7 +199,8 @@ public sealed class IntakeWatcherCoordinator : IDisposable
                     ConfiguredFolders: configuredFolders,
                     StabilityDecision: stabilityDecision,
                     BatchDecision: batchDecision,
-                    ObservedAt: observedEvent.ObservedAt),
+                    ObservedAt: observedEvent.ObservedAt,
+                    OwnOperations: _ownOperationRegistry?.GetActiveSuppressions(observedEvent.ObservedAt)),
                 observedEvent.OldPath,
                 cancellationToken).ConfigureAwait(false);
 

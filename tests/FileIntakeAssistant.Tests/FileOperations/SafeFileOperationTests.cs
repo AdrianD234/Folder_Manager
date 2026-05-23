@@ -1,6 +1,10 @@
 using FileIntakeAssistant.Core.FileOperations;
+using FileIntakeAssistant.Core.Batching;
+using FileIntakeAssistant.Core.Intake;
 using FileIntakeAssistant.Core.Models;
 using FileIntakeAssistant.Core.Persistence;
+using FileIntakeAssistant.Core.Stability;
+using FileIntakeAssistant.Core.Triage;
 using FileIntakeAssistant.Infrastructure.FileSystem;
 using FileIntakeAssistant.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
@@ -314,6 +318,59 @@ public sealed class SafeFileOperationTests : IAsyncLifetime
         Assert.Null(result.UndoActionId);
     }
 
+    [Theory]
+    [InlineData(SafeFileOperationKind.Move)]
+    [InlineData(SafeFileOperationKind.Rename)]
+    public async Task SafeFileOperations_AppMoveOrRenameRegistersOwnOperationSuppression(
+        SafeFileOperationKind operationKind)
+    {
+        var store = await CreateStoreAsync();
+        var source = CreateTempFile("downloads", "Budget.xlsx", "budget-v1");
+        var fileRecordId = await AddFileRecordAsync(store, source);
+        var destination = operationKind == SafeFileOperationKind.Move
+            ? Path.Combine(_testRoot, "filed")
+            : Path.GetDirectoryName(source)!;
+        Directory.CreateDirectory(destination);
+        var requestedFileName = operationKind == SafeFileOperationKind.Move
+            ? "Budget.xlsx"
+            : "Budget final.xlsx";
+        var plan = PlanMove(source, destination, requestedFileName, operationKind);
+        var registry = new OwnOperationSuppressionRegistry();
+        var executor = new SafeFileOperationExecutor(store, registry);
+
+        var result = await executor.ExecuteAsync(
+            plan,
+            Confirm(plan),
+            fileRecordId,
+            FixedNow.AddMinutes(1));
+
+        Assert.True(result.Succeeded, result.FailureReason);
+        var activeSuppressions = registry.GetActiveSuppressions(FixedNow.AddMinutes(1).AddSeconds(1));
+        var suppression = Assert.Single(activeSuppressions);
+        Assert.Equal(source, suppression.OldPath);
+        Assert.Equal(plan.DestinationPath, suppression.NewPath);
+
+        var oldPathDecision = ProcessWithOwnOperations(
+            source,
+            Path.GetDirectoryName(source)!,
+            activeSuppressions);
+        Assert.Equal(IntakeProcessingOutcome.Ignored, oldPathDecision.Outcome);
+        Assert.Equal(TriageCategory.OwnOperation, oldPathDecision.TriageDecision.Category);
+
+        var newPathDecision = ProcessWithOwnOperations(
+            plan.DestinationPath,
+            Path.GetDirectoryName(plan.DestinationPath)!,
+            activeSuppressions);
+        Assert.Equal(TriageCategory.OwnOperation, newPathDecision.TriageDecision.Category);
+
+        var unrelatedDecision = ProcessWithOwnOperations(
+            @"C:\Intake\Other.pdf",
+            @"C:\Intake",
+            activeSuppressions);
+        Assert.Equal(IntakeProcessingOutcome.CandidateQueued, unrelatedDecision.Outcome);
+        Assert.Equal(TriageCategory.MeaningfulOneOff, unrelatedDecision.TriageDecision.Category);
+    }
+
     private async Task<IFileIntakeStore> CreateStoreAsync()
     {
         Assert.StartsWith(
@@ -357,6 +414,51 @@ public sealed class SafeFileOperationTests : IAsyncLifetime
     private static SafeFileOperationConfirmation Confirm(SafeFileOperationPlan plan)
     {
         return new SafeFileOperationConfirmation(plan.PlanId, true, FixedNow.AddMinutes(1));
+    }
+
+    private static IntakeProcessingResult ProcessWithOwnOperations(
+        string path,
+        string configuredFolderPath,
+        IReadOnlyCollection<OwnOperationSuppression> ownOperations)
+    {
+        var queue = new InMemoryIntakeCandidateQueue();
+        var processor = new IntakeEventProcessor(new FileEventTriageEngine(), queue);
+
+        return processor.Process(new IntakeProcessingRequest(
+            Path: path,
+            EventKind: FileEventKind.Renamed,
+            IsDirectory: false,
+            SizeBytes: 1_024,
+            ConfiguredFolders:
+            [
+                new IntakeFolder(
+                    Id: 42,
+                    Path: configuredFolderPath,
+                    DisplayName: "Test intake",
+                    Enabled: true,
+                    FolderType: "Test",
+                    Recursive: false,
+                    CreatedAt: FixedNow,
+                    UpdatedAt: FixedNow)
+            ],
+            StabilityDecision: new FileStabilityDecision(
+                FileStabilityStatus.Stable,
+                IsStable: true,
+                Reason: "Stable test file.",
+                RequiredDebounceWindow: TimeSpan.FromSeconds(2),
+                StableSince: FixedNow.AddMinutes(1),
+                HashPlan: HashPlan.ComputeSha256),
+            BatchDecision: new BatchDetectionResult(
+                RootPath: configuredFolderPath,
+                BatchType: EventBatchType.None,
+                Decision: BatchPromptDecision.NoBatch,
+                FileCount: 1,
+                StartedAt: FixedNow.AddMinutes(1),
+                EndedAt: FixedNow.AddMinutes(1),
+                SuppressIndividualPrompts: false,
+                Reason: "No batch in test."),
+            ObservedAt: FixedNow.AddMinutes(1).AddSeconds(1),
+            OwnOperations: ownOperations));
     }
 
     private static async Task<long> AddFileRecordAsync(IFileIntakeStore store, string source)

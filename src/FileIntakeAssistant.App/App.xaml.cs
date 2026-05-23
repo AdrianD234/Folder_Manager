@@ -72,7 +72,8 @@ public partial class App : System.Windows.Application
                 new EverythingCliSearchProvider());
             var confirmationService = new MessageBoxUserConfirmationService();
             var fileLaunchService = new WindowsFileLaunchService();
-            var safeFileOperationExecutor = new SafeFileOperationExecutor(store);
+            var ownOperationRegistry = new OwnOperationSuppressionRegistry();
+            var safeFileOperationExecutor = new SafeFileOperationExecutor(store, ownOperationRegistry);
             var searchViewModel = new SearchCommandViewModel(
                 new SearchWorkflowService(
                     new SearchIntentParser(),
@@ -126,6 +127,7 @@ public partial class App : System.Windows.Application
                 new LocalFileStabilitySnapshotReader(),
                 new FileStabilityChecker(),
                 new BatchDetector(),
+                ownOperationRegistry,
                 afterProcessedAsync: () => Dispatcher
                     .InvokeAsync(async () =>
                     {

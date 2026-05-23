@@ -23,6 +23,9 @@ Reason:
 - Manual-smoke fixture planning is reproducible through `tools/new-smoke-fixtures.ps1 -PlanOnly`, but no interactive smoke pass has been run.
 - Release-readiness documentation consistency is checked by `tools/check-release-readiness.ps1`, but this does not replace manual smoke.
 - Structured local JSON-lines logging now mirrors persisted workflow/audit events and app-shell lifecycle events without raw notes, transcripts, provider metadata, audio paths, search/voice command text, or secrets.
+- Pre-smoke hardening now constrains OS file/folder launch actions to existing fully qualified local filesystem targets and rejects URL, URI, shell, relative, nonexistent, and wrong-target launch requests before `Process.Start`.
+- App-performed move, rename, and undo operations now register short-window own-operation suppressions that the watcher intake coordinator passes into triage.
+- The in-memory candidate queue now suppresses duplicate candidates for the same normalized path inside a short observed/stable window, but pending candidate UI state is still not durable across restart.
 
 The goal must remain active until the remaining workflow gaps are implemented, manually validated, or explicitly accepted as deferred by the user.
 
@@ -47,8 +50,8 @@ The goal must remain active until the remaining workflow gaps are implemented, m
 | Safe move/rename | Planner/executor/undo tests exist. Milestone 15 adds WPF preview/confirmation and undo UI tests. | Partially complete: automated coverage exists; interactive smoke not run. |
 | Never delete/overwrite | Safe-operation tests cover no-overwrite behavior; no delete operation is implemented. | Complete for implemented file-operation path. |
 | Voice/text retrieval parser | Deterministic parser and SQLite search tests exist. | Complete for parser/search; UI action execution incomplete. |
-| Open single confirmed file/folder | Confirmation outcome model exists. Milestone 15 adds WPF search-result open actions behind confirmation and fake-launcher tests. | Partially complete: automated coverage exists; interactive OS launch smoke not run. |
-| Confirm before opening multiple files | Core confirmation policy exists. Milestone 15 adds bulk-open confirmation and cancellation tests. | Partially complete: automated coverage exists; interactive OS launch smoke not run. |
+| Open single confirmed file/folder | Confirmation outcome model exists. Milestone 15 adds WPF search-result open actions behind confirmation and fake-launcher tests. Pre-smoke hardening now rejects unsafe launch target strings and requires existing file/directory targets. | Partially complete: automated coverage exists; interactive OS launch smoke not run. |
+| Confirm before opening multiple files | Core confirmation policy exists. Milestone 15 adds bulk-open confirmation and cancellation tests. Pre-smoke hardening keeps bulk launch constrained to existing local filesystem paths. | Partially complete: automated coverage exists; interactive OS launch smoke not run. |
 | Everything optional | Disabled-by-default optional CLI provider with fake tests exists. | Complete for provider boundary; UI configuration incomplete. |
 | Logging every user-visible/skipped/failed/provider/filesystem operation | SQLite action/search/transcription rows exist for implemented workflows. Milestone 13 adds watcher event audit rows. Milestone 14 adds popup save and skip/dismiss action rows. The app now wraps SQLite persistence with structured local JSON-lines logging for persisted workflow/audit rows, and App shell lifecycle hooks log startup, exit, tray commands, hotkey registration/activation, and watcher restart/dispose events. Logging tests prove raw transcripts, provider metadata, audio paths, private details, and secret-looking values are not mirrored. | Partially complete: automated structured logging coverage exists; full interactive smoke proof remains incomplete. |
 | Manual deterministic mode without API key | Manual metadata, manual transcription fallback, deterministic parser, SQLite search, watcher-popup manual transcript capture, safe filing confirmation, undo UI, and confirmed retrieval actions exist. | Partially complete: manual smoke remains incomplete. |
@@ -58,12 +61,14 @@ The goal must remain active until the remaining workflow gaps are implemented, m
 ## Critical Gaps
 - Intake folder settings and watcher startup wiring are implemented, but not manually smoke-tested.
 - Watcher candidates are connected to candidate popup display, but the popup is not manually smoke-tested.
-- Candidate queue is in-memory and backed by persistent event audit rows, but durable candidate state and deduplication are not implemented.
+- Candidate queue is in-memory and backed by persistent event audit rows. Lightweight normalized-path deduplication is implemented, but durable candidate state across restart is not implemented.
 - Safe move/rename preview, confirmation, undo UI, and confirmed retrieval actions are implemented by automated validation but still need interactive Windows smoke testing.
 - Real microphone recording is not implemented.
 - Provider configuration UI for OpenAI and Everything is not implemented.
 - Manual smoke tests are not run and are deferred pending user approval or a user-run smoke pass; a temp-only fixture helper now exists for that approved pass.
 - Structured file logging now mirrors persisted workflow/audit rows and App shell lifecycle events without raw private payloads; interactive smoke proof remains incomplete.
+- File/folder launch hardening is covered by automated fake-launcher tests, but interactive OS launch behavior is still not smoke-tested.
+- Own-operation suppression is now wired from `SafeFileOperationExecutor` through a Core registry into `IntakeWatcherCoordinator`; automated tests prove app move/rename suppressions do not hide unrelated candidate paths.
 - Runtime-specific `win-x64` publish now passes after approved NuGet access; no-RID framework-dependent publish, artifact safety checking, fixture/report planning, and release-readiness consistency checking succeed.
 
 ## Safety And Privacy Review
@@ -81,6 +86,8 @@ No safety or privacy invariant violation was found in the implemented automated-
 - Manual-smoke fixture planning passed through `tools/new-smoke-fixtures.ps1 -PlanOnly` without creating files. The helper itself is constrained to system temp roots, refuses existing roots, and never deletes or overwrites files.
 - Release-readiness consistency checking passed through `tools/check-release-readiness.ps1` without launching the app, touching real user files, making provider calls, or requiring network access.
 - Structured local logging tests use temp log paths and prove raw private transcript text, provider metadata, audio path names, action detail payloads, lifecycle secret-looking values, and API-key-shaped fields are not mirrored to the local JSON-lines audit log.
+- Additional pre-smoke logging tests prove raw source URLs, raw search/voice text, notes, transcripts, provider metadata, and audio paths are defensively redacted by private payload-shaped log keys.
+- Additional pre-smoke launch tests use an injected fake process starter and do not launch real OS processes.
 
 Remaining risk is workflow incompleteness rather than a known unsafe implementation.
 

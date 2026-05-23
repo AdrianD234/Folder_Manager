@@ -2,6 +2,7 @@ using System.Text.Json;
 using FileIntakeAssistant.Core.FileOperations;
 using FileIntakeAssistant.Core.Models;
 using FileIntakeAssistant.Core.Persistence;
+using FileIntakeAssistant.Core.Triage;
 
 namespace FileIntakeAssistant.Infrastructure.FileSystem;
 
@@ -9,18 +10,28 @@ public sealed class SafeFileOperationExecutor
 {
     private readonly IFileIntakeStore _store;
     private readonly FileOperationIdentityReader _identityReader;
+    private readonly IOwnOperationSuppressionRegistry? _ownOperationRegistry;
 
     public SafeFileOperationExecutor(IFileIntakeStore store)
-        : this(store, new FileOperationIdentityReader())
+        : this(store, new FileOperationIdentityReader(), ownOperationRegistry: null)
+    {
+    }
+
+    public SafeFileOperationExecutor(
+        IFileIntakeStore store,
+        IOwnOperationSuppressionRegistry ownOperationRegistry)
+        : this(store, new FileOperationIdentityReader(), ownOperationRegistry)
     {
     }
 
     internal SafeFileOperationExecutor(
         IFileIntakeStore store,
-        FileOperationIdentityReader identityReader)
+        FileOperationIdentityReader identityReader,
+        IOwnOperationSuppressionRegistry? ownOperationRegistry = null)
     {
         _store = store;
         _identityReader = identityReader;
+        _ownOperationRegistry = ownOperationRegistry;
     }
 
     public async Task<SafeFileOperationExecutionResult> ExecuteAsync(
@@ -107,6 +118,10 @@ public sealed class SafeFileOperationExecutor
                 Directory.CreateDirectory(destinationDirectory);
             }
 
+            _ownOperationRegistry?.RegisterMoveOrRename(
+                plan.SourcePath,
+                plan.DestinationPath,
+                now);
             File.Move(plan.SourcePath, plan.DestinationPath);
 
             var completedAction = new FileActionRecord(
@@ -203,6 +218,10 @@ public sealed class SafeFileOperationExecutor
 
         try
         {
+            _ownOperationRegistry?.RegisterMoveOrRename(
+                undoAction.ResultingPath,
+                undoAction.OriginalPath,
+                now);
             File.Move(undoAction.ResultingPath, undoAction.OriginalPath);
 
             var fileRecord = await _store.GetFileRecordAsync(

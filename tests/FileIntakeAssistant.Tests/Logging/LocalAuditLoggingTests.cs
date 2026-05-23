@@ -63,6 +63,40 @@ public sealed class LocalAuditLoggingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task LocalAuditLog_RedactsPrivatePayloadKeys()
+    {
+        var log = new JsonLinesLocalAuditLog(LogsDirectory);
+
+        await log.WriteAsync(
+            "privacy.review",
+            "Completed",
+            new Dictionary<string, object?>
+            {
+                ["userNote"] = "private note text",
+                ["transcriptText"] = "private transcript text",
+                ["sourceUrl"] = "https://example.test/private-source",
+                ["providerMetadataJson"] = """{"request":"private provider payload"}""",
+                ["audioPath"] = Path.Combine(_testRoot, "temp-audio", "private.wav"),
+                ["rawText"] = "open the private file",
+                ["queryText"] = "private search",
+                ["safeField"] = "kept"
+            });
+
+        var content = await File.ReadAllTextAsync(log.LogFilePath);
+
+        Assert.Contains("privacy.review", content);
+        Assert.Contains("kept", content);
+        Assert.Contains("redacted", content);
+        Assert.DoesNotContain("private note text", content);
+        Assert.DoesNotContain("private transcript text", content);
+        Assert.DoesNotContain("https://example.test/private-source", content);
+        Assert.DoesNotContain("private provider payload", content);
+        Assert.DoesNotContain("private.wav", content);
+        Assert.DoesNotContain("open the private file", content);
+        Assert.DoesNotContain("private search", content);
+    }
+
+    [Fact]
     public async Task StructuredLoggingStore_MirrorsAuditRowsWithoutPrivatePayloads()
     {
         var store = await CreateLoggingStoreAsync();

@@ -3,7 +3,7 @@
 ## Current Milestone
 Milestone 16: Interactive Smoke Pass And Release Readiness
 
-Status: In progress. Sandbox-safe repo-local validation passes through `tools/validate.ps1`; the latest run used workspace-local `.dotnet`, `.appdata`, `.nuget\packages`, and `.nuget\http-cache` paths and passed with 156 tests. No-RID framework-dependent publish passes, runtime-specific `win-x64` publish passed after approved NuGet access, both publish artifacts passed `tools/check-publish-artifact.ps1`, `tools/new-smoke-fixtures.ps1 -PlanOnly` validates the manual-smoke fixture layout without creating files, `tools/new-smoke-run-report.ps1 -PlanOnly` validates the ignored report-template path without creating files, and `tools/check-release-readiness.ps1` passes as a read-only release-readiness consistency gate. Interactive Windows smoke tests are not run and are deferred pending user approval or a user-run smoke pass.
+Status: In progress. Focused pre-smoke hardening is complete by automated validation. File/folder launch now rejects unsafe shell targets before OS launch, app move/rename/undo operations register own-operation suppressions consumed by watcher intake processing, the in-memory candidate queue has lightweight normalized-path deduplication, structured audit logging has defensive private-payload key redaction, and minimal Windows CI was added for restore/build/test. Sandbox-safe repo-local validation passes through `tools/validate.ps1`; the latest run used workspace-local `.dotnet`, `.appdata`, `.nuget\packages`, and `.nuget\http-cache` paths and passed with 172 tests. No-RID framework-dependent publish remains the current artifact checked by `tools/check-release-readiness.ps1`; previous runtime-specific `win-x64` publish passed after approved NuGet access. Interactive Windows smoke tests are not run and are deferred pending user approval or a user-run smoke pass.
 
 ## Completed Milestones
 - Milestone 0: Repository Governance And Planning Files.
@@ -27,6 +27,43 @@ Status: In progress. Sandbox-safe repo-local validation passes through `tools/va
 - Milestone 15: Safe Filing Confirmation, Undo UI, And Confirmed Retrieval Actions.
 
 ## Validation Commands Last Run
+Pre-smoke hardening validation from repository root:
+
+```powershell
+dotnet build .\FileIntakeAssistant.sln --no-restore
+dotnet test .\FileIntakeAssistant.sln --no-build --filter SafeFileOperations --verbosity normal
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Watcher --verbosity normal
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Logging --verbosity normal
+dotnet build .\FileIntakeAssistant.sln --no-restore
+dotnet test .\FileIntakeAssistant.sln --no-build --filter SafeFileOperations --verbosity normal
+.\tools\validate.ps1
+dotnet test .\FileIntakeAssistant.sln --no-build --filter SafeFileOperations --verbosity normal
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Watcher --verbosity normal
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Search --verbosity normal
+dotnet test .\FileIntakeAssistant.sln --no-build --filter Logging --verbosity normal
+.\tools\check-release-readiness.ps1
+git --no-pager diff --check
+git --no-pager status --short --branch
+```
+
+Results:
+
+- Required governance docs were read before code changes: `AGENTS.md`, `.codex/AGENTS.md`, `docs/GOAL.md`, `docs/STATUS.md`, `docs/PLAN.md`, `docs/EXECUTION.md`, `docs/TESTING.md`, `docs/SECURITY_PRIVACY.md`, `docs/COMPLETION_AUDIT.md`, `docs/MANUAL_SMOKE_TESTS.md`, `docs/RISK_REGISTER.md`, and `docs/DECISIONS.md`.
+- Initial `dotnet build .\FileIntakeAssistant.sln --no-restore` failed with `CS0136` in `JsonLinesLocalAuditLog.cs` after adding private-payload redaction. The variable shadowing was fixed.
+- Next `dotnet build .\FileIntakeAssistant.sln --no-restore` failed with missing `System.IO` symbols in `FileLaunchServices.cs`. The missing `using System.IO;` was added.
+- Final `dotnet build .\FileIntakeAssistant.sln --no-restore` passed with 0 warnings and 0 errors.
+- Initial parallel filtered validation found the new SafeFileOperations own-operation test using a temp path that triage correctly classified as AppData noise for the unrelated-path assertion. The test setup was corrected to use a synthetic intake path for the unrelated candidate. In the same parallel run, `dotnet test .\FileIntakeAssistant.sln --no-build --filter Watcher --verbosity normal` passed with Total tests: 12, Passed: 12, and `dotnet test .\FileIntakeAssistant.sln --no-build --filter Logging --verbosity normal` passed with Total tests: 5, Passed: 5.
+- After rebuilding, `dotnet test .\FileIntakeAssistant.sln --no-build --filter SafeFileOperations --verbosity normal` passed with Total tests: 13, Passed: 13.
+- After adding the ADS-like target rejection case, `dotnet build .\FileIntakeAssistant.sln --no-restore` passed with 0 warnings and 0 errors.
+- Final `.\tools\validate.ps1` passed. SDK `8.0.421` was available, repo `global.json` was detected, restore reported all projects up to date, build passed with 0 warnings and 0 errors, and the full test suite passed with Total tests: 172, Passed: 172. The script used repo-local `.dotnet`, `.appdata`, `.nuget\packages`, and `.nuget\http-cache` paths.
+- Required final `dotnet test .\FileIntakeAssistant.sln --no-build --filter SafeFileOperations --verbosity normal` passed with Total tests: 13, Passed: 13.
+- Required final `dotnet test .\FileIntakeAssistant.sln --no-build --filter Watcher --verbosity normal` passed with Total tests: 12, Passed: 12.
+- Required final `dotnet test .\FileIntakeAssistant.sln --no-build --filter Search --verbosity normal` passed with Total tests: 38, Passed: 38.
+- Required final `dotnet test .\FileIntakeAssistant.sln --no-build --filter Logging --verbosity normal` passed with Total tests: 5, Passed: 5.
+- `.\tools\check-release-readiness.ps1` passed. It invoked the publish artifact safety checker, which inspected 33 files under `artifacts\publish\FileIntakeAssistant-framework-dependent`, then reported that automated release gates are documented and current blockers remain explicit.
+- `git --no-pager diff --check` passed with Git line-ending conversion warnings only.
+- `git --no-pager status --short --branch` showed the pre-smoke hardening source, test, CI workflow, and documentation changes pending commit.
+
 Milestone 16 validation from repository root:
 
 ```powershell
@@ -584,7 +621,7 @@ Milestone 4 deliverables:
 - Tests use temp directories only for filesystem cases and do not touch real Downloads, Desktop, OneDrive, AppData, Program Files, Windows, repo folders, or user-profile folders.
 
 ## Test Status
-Milestone 16 automated validation passed locally through `tools/validate.ps1`: 156 tests passed. The validation route redirects .NET and NuGet home/cache paths into ignored repo-local directories and avoids the real Windows profile NuGet config. No-RID framework-dependent publish passed through `tools/publish-local.ps1`, and runtime-specific `win-x64` publish passed after approved NuGet access through `tools/publish-local.ps1 -RuntimeSpecific`. The no-RID publish artifact passed `tools/check-publish-artifact.ps1`: 33 files inspected and no forbidden private runtime artifacts or secrets found. The runtime-specific artifact passed `tools/check-publish-artifact.ps1 -Path .\artifacts\publish\FileIntakeAssistant-win-x64`: 14 files inspected and no forbidden private runtime artifacts or secrets found. Manual-smoke fixture planning passed through `tools/new-smoke-fixtures.ps1 -PlanOnly` without creating files. Manual-smoke report planning passed through `tools/new-smoke-run-report.ps1 -PlanOnly` without creating files. Release-readiness consistency passed through `tools/check-release-readiness.ps1`.
+Milestone 16 automated validation passed locally through `tools/validate.ps1`: 172 tests passed. The validation route redirects .NET and NuGet home/cache paths into ignored repo-local directories and avoids the real Windows profile NuGet config. Focused pre-smoke hardening filters also passed: SafeFileOperations 13/13, Watcher 12/12, Search 38/38, and Logging 5/5. The hardening tests cover launch target rejection without starting OS processes, app move/rename own-operation suppression, unrelated-event non-suppression, candidate queue deduplication, and private-payload audit-log redaction. No-RID framework-dependent publish previously passed through `tools/publish-local.ps1`, and runtime-specific `win-x64` publish previously passed after approved NuGet access through `tools/publish-local.ps1 -RuntimeSpecific`. The current release-readiness check passed and rechecked the no-RID publish artifact: 33 files inspected and no forbidden private runtime artifacts or secrets found. Manual-smoke fixture planning previously passed through `tools/new-smoke-fixtures.ps1 -PlanOnly` without creating files. Manual-smoke report planning previously passed through `tools/new-smoke-run-report.ps1 -PlanOnly` without creating files. Interactive manual smoke remains not run.
 
 ## Known Issues
 - NuGet can still hit transient network timeouts in restricted or slow environments.
@@ -597,8 +634,10 @@ Milestone 16 automated validation passed locally through `tools/validate.ps1`: 1
 - Safe file operation preview, confirmation, and undo UI now exist and are covered by automated temp-directory tests. Interactive Windows smoke testing remains required.
 - The download-intake popup workflow now has a dismissible metadata popup with manual note/transcript fallback, but it has not been manually smoke-tested in an interactive Windows session.
 - Search UI now performs confirmed open-file/open-containing-folder/bulk-open actions through an App-layer launch boundary with fake-launcher automated tests. Interactive Windows smoke testing remains required before claiming OS launch behavior works in the user session.
-- Structured local file logging through a dependency-free JSON-lines equivalent now mirrors persisted workflow/audit rows and App shell lifecycle events without raw private payloads in automated tests; interactive Windows proof remains incomplete.
-- Persistent deduplication for duplicate watcher events is not implemented yet. Current tests prove queue gating, settings validation, event audit rows, and explicit watched-folder scope.
+- Structured local file logging through a dependency-free JSON-lines equivalent now mirrors persisted workflow/audit rows and App shell lifecycle events without raw private payloads in automated tests; the pre-smoke hardening pass adds defensive redaction for private payload-shaped keys such as source URLs, transcript text, provider metadata, audio paths, raw search/voice text, and notes. Interactive Windows proof remains incomplete.
+- Persistent durable candidate state is not implemented yet. Current tests prove queue gating, settings validation, event audit rows, explicit watched-folder scope, and lightweight in-memory duplicate suppression by normalized path inside the observed/stable window.
+- File/folder launch is now hardened to reject unsafe shell targets and wrong target types before OS launch, with fake-process tests only. Interactive Windows proof of actual OS launch behavior remains incomplete.
+- Own-operation suppression is now wired from safe file operations into watcher intake processing through an in-memory registry. Suppression is exact-path and short-window only; it is not persisted across restart.
 - Installer, code signing, auto-start, and update-channel work are not implemented. Packaging next steps are documented in `docs/PACKAGING.md`.
 - Runtime-specific `win-x64` publish requires Microsoft runtime-pack packages when they are not already cached. The unapproved sandbox run failed with `NU1801`/`NU1101` because nuget.org was unavailable, then the approved NuGet-access run restored the required runtime packs and passed.
 

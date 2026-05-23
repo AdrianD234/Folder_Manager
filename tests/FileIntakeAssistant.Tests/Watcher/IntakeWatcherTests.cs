@@ -112,6 +112,38 @@ public sealed class IntakeWatcherTests : IDisposable
     }
 
     [Fact]
+    public void Watcher_DuplicateCandidateEventsForSamePathAreDeduplicatedInsideWindow()
+    {
+        var queue = new InMemoryIntakeCandidateQueue(TimeSpan.FromSeconds(30));
+        var processor = new IntakeEventProcessor(new FileEventTriageEngine(), queue);
+        var request = Request(
+            path: @"C:\Intake\Report.pdf",
+            configuredFolders: [IntakeFolder(@"C:\Intake", id: 42, enabled: true)]);
+
+        processor.Process(request);
+        processor.Process(request);
+
+        var candidate = Assert.Single(queue.Snapshot());
+        Assert.Equal(@"C:\Intake\Report.pdf", candidate.Path);
+    }
+
+    [Fact]
+    public void Watcher_DeduplicationDoesNotSuppressUnrelatedCandidatePath()
+    {
+        var queue = new InMemoryIntakeCandidateQueue(TimeSpan.FromSeconds(30));
+        var processor = new IntakeEventProcessor(new FileEventTriageEngine(), queue);
+
+        processor.Process(Request(
+            path: @"C:\Intake\Report.pdf",
+            configuredFolders: [IntakeFolder(@"C:\Intake", id: 42, enabled: true)]));
+        processor.Process(Request(
+            path: @"C:\Intake\Other.pdf",
+            configuredFolders: [IntakeFolder(@"C:\Intake", id: 42, enabled: true)]));
+
+        Assert.Equal(2, queue.Count);
+    }
+
+    [Fact]
     public void Watcher_PartialDownloadIsNotQueued()
     {
         var queue = new InMemoryIntakeCandidateQueue();
