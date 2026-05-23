@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FE0B8D75-57EC-40B1-B19F-803347F3B519}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileIntakeAssistant.App", "src\FileIntakeAssistant.App\FileIntakeAssistant.App.csproj", "{5810B54B-AAE5-404F-AC68-0A83C24B3825}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileIntakeAssistant.Core", "src\FileIntakeAssistant.Core\FileIntakeAssistant.Core.csproj", "{522E9069-61CF-4036-A453-D36ABE0426E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileIntakeAssistant.Infrastructure", "src\FileIntakeAssistant.Infrastructure\FileIntakeAssistant.Infrastructure.csproj", "{145F48E7-17F5-4C58-BA10-0A00E179CB14}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B0B17B7F-DE6C-4524-80FB-8B49AF8955EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileIntakeAssistant.Tests", "tests\FileIntakeAssistant.Tests\FileIntakeAssistant.Tests.csproj", "{D56EEA79-4341-4D2E-8CA0-207C12A034E4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5810B54B-AAE5-404F-AC68-0A83C24B3825}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5810B54B-AAE5-404F-AC68-0A83C24B3825}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5810B54B-AAE5-404F-AC68-0A83C24B3825}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5810B54B-AAE5-404F-AC68-0A83C24B3825}.Release|Any CPU.Build.0 = Release|Any CPU
+		{522E9069-61CF-4036-A453-D36ABE0426E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{522E9069-61CF-4036-A453-D36ABE0426E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{522E9069-61CF-4036-A453-D36ABE0426E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{522E9069-61CF-4036-A453-D36ABE0426E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{145F48E7-17F5-4C58-BA10-0A00E179CB14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{145F48E7-17F5-4C58-BA10-0A00E179CB14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{145F48E7-17F5-4C58-BA10-0A00E179CB14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{145F48E7-17F5-4C58-BA10-0A00E179CB14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D56EEA79-4341-4D2E-8CA0-207C12A034E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D56EEA79-4341-4D2E-8CA0-207C12A034E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D56EEA79-4341-4D2E-8CA0-207C12A034E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D56EEA79-4341-4D2E-8CA0-207C12A034E4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5810B54B-AAE5-404F-AC68-0A83C24B3825} = {FE0B8D75-57EC-40B1-B19F-803347F3B519}
+		{522E9069-61CF-4036-A453-D36ABE0426E4} = {FE0B8D75-57EC-40B1-B19F-803347F3B519}
+		{145F48E7-17F5-4C58-BA10-0A00E179CB14} = {FE0B8D75-57EC-40B1-B19F-803347F3B519}
+		{D56EEA79-4341-4D2E-8CA0-207C12A034E4} = {B0B17B7F-DE6C-4524-80FB-8B49AF8955EC}
+	EndGlobalSection
+EndGlobal

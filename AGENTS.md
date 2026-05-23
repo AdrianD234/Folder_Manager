@@ -31,6 +31,7 @@ global.json
 .gitignore
 docs/
   SPEC.md
+  GOAL.md
   ARCHITECTURE.md
   PLAN.md
   EXECUTION.md
@@ -112,6 +113,7 @@ Do not report tests as passing unless the commands were actually run and complet
 - Automated tests must use temporary directories only. Tests must never mutate real Downloads, Desktop, OneDrive, repo, or project folders.
 
 ## Planning And Execution Documents
+- `docs/GOAL.md` is the long-running implementation contract. Read it before implementation work.
 - `docs/PLAN.md` is the milestone source of truth.
 - `docs/EXECUTION.md` is the runbook for how agents work through milestones.
 - `docs/STATUS.md` must be updated after each milestone or blocked attempt.

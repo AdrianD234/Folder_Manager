@@ -25,6 +25,7 @@
 | R015 | User trust erosion from unsafe automation | High | Explicit confirmation, logs, undo, conservative defaults, manual mode | Open |
 | R016 | SDK/toolchain mismatch | Medium | Pin SDK in `global.json`, verify `dotnet --info`, document blocker in status | Open |
 | R017 | External dependency drift | Medium | Central package versions, lock files, decision notes for dependencies | Open |
+| R018 | NuGet restore unavailable in restricted environments | Medium | Use pinned central versions, commit lock files after successful restore, document exact restore blocker, and retry when network or local package cache is available | Open |
 
 ## Review Cadence
 Review this register after every milestone. Add new risks immediately when discovered.

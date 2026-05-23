@@ -2,10 +2,11 @@
 
 Always start by reading the repository root `AGENTS.md`.
 
-Follow `docs/EXECUTION.md` for implementation work.
+Use `docs/STATUS.md` as the source of truth for the active milestone. Use `docs/GOAL.md` as the long-running goal contract. Follow `docs/EXECUTION.md` for the runbook and `docs/PLAN.md` for milestone scope, acceptance criteria, validation commands, risks, stop conditions, and expected file changes.
 
 ## Rules
 - Do not implement beyond the current milestone in `docs/STATUS.md`.
+- Read `docs/GOAL.md` before implementation work.
 - Keep changes scoped and reviewable.
 - Use high reasoning for planning, safety-critical logic, privacy decisions, and file operation code.
 - Prefer tests over assumptions.
@@ -20,5 +21,5 @@ Follow `docs/EXECUTION.md` for implementation work.
 - Update `docs/DECISIONS.md` for meaningful design or dependency choices.
 - Update `docs/RISK_REGISTER.md` for new or changed risks.
 
-## Current Phase
-Milestone 0 creates documentation and config scaffolding only. App implementation begins in Milestone 1 after user approval.
+## Active Milestone
+Do not hard-code the current phase in this file. Read `docs/STATUS.md` before work and implement only the active milestone listed there.
