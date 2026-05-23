@@ -1,0 +1,32 @@
+# Example Codex configuration for this repository.
+# This file is documentation only. It is not active configuration.
+# Do not modify the user's actual Codex config unless explicitly asked.
+
+[project]
+name = "File Intake Assistant"
+purpose = "Windows-native private file intake, metadata capture, and retrieval"
+
+[execution]
+mode = "milestone"
+source_of_truth = "docs/PLAN.md"
+runbook = "docs/EXECUTION.md"
+status_file = "docs/STATUS.md"
+
+[safety]
+never_delete_files = true
+never_overwrite_files = true
+require_confirmation_for_move_or_rename = true
+tests_use_temp_directories_only = true
+
+[providers]
+openai_required = false
+everything_required = false
+
+[validation]
+commands = [
+  "dotnet --info",
+  "dotnet restore",
+  "dotnet build",
+  "dotnet test",
+  "git status --short"
+]

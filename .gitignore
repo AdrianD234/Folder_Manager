@@ -1,0 +1,61 @@
+# Build output
+bin/
+obj/
+TestResults/
+artifacts/
+
+# Visual Studio and Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+packages/
+project.assets.json
+
+# Keep NuGet lock files tracked
+!packages.lock.json
+
+# Logs and local runtime artifacts
+*.log
+logs/
+data/
+temp/
+temp-audio/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Secrets and local settings
+*.secret.json
+secrets.json
+.env
+.env.*
+appsettings.Local.json
+settings.local.json
+
+# Windows and editor noise
+Thumbs.db
+Desktop.ini
+*.swp
+*.tmp
+*.bak
+
+# App-specific private artifacts
+file-intake.db
+settings.json
+*.wav
+*.mp3
+*.m4a
+*.webm
+*.transcript.json
+
+# Do not ignore governance examples
+!.codex/config.example.toml
