@@ -23,9 +23,9 @@
 | R013 | Database corruption | High | Migrations, backups/exports, SQLite tests, clear recovery guidance | Open |
 | R014 | Large file hashing performance | Medium | Hash ordinary stable files, defer large hashes, configurable thresholds | Open |
 | R015 | User trust erosion from unsafe automation | High | Explicit confirmation, logs, undo, conservative defaults, manual mode | Open |
-| R016 | SDK/toolchain mismatch | Medium | Pin SDK in `global.json`, verify `dotnet --info`, document blocker in status | Open |
+| R016 | SDK/toolchain mismatch | Medium | Pin SDK in `global.json`, verify `dotnet --info`, document blocker in status | Mitigated: .NET SDK 8.0.421 verified locally |
 | R017 | External dependency drift | Medium | Central package versions, lock files, decision notes for dependencies | Open |
-| R018 | NuGet restore unavailable in restricted environments | Medium | Use pinned central versions, commit lock files after successful restore, document exact restore blocker, and retry when network or local package cache is available | Open |
+| R018 | NuGet restore unavailable in restricted environments | Medium | Use pinned central versions, commit lock files after successful restore, document exact restore blocker, and retry when network or local package cache is available | Mitigated locally: restore passed and test lock file resolved; monitor in restricted/sandboxed runs |
 
 ## Review Cadence
 Review this register after every milestone. Add new risks immediately when discovered.
